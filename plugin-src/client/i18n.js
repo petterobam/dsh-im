@@ -4,6 +4,10 @@ export const IM_LOCALE_NAMESPACE = 'dsh-im';
 
 const EN = Object.freeze({
   '$locale': 'en',
+  // Fork: the deployment's own copy keeps the same bilingual invariant.
+  '有风 IM': 'Youfeng IM',
+  '把飞书等 IM 机器人连接到有风 Buddy': 'Connect Feishu and other IM bots to Youfeng Buddy',
+  '这是有风 Buddy 内置插件，随应用更新，无需单独更新。': 'This is a built-in Youfeng Buddy plugin; it updates with the app, so no separate update is needed.',
   'IM机器人': 'IM bots',
   'IM机器人设置': 'IM bot settings',
   '更多机器人设置': 'More bot settings',

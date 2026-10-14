@@ -44,6 +44,19 @@ built-in package.
 7. **Workspace integration** — root Yarn workspace, Desktop profile bundle
    list, package metadata and the old `@xmanrui/dsh-im` profile dependency
    migration are part of the in-repo fork.
+8. **Bilingual coverage for the deployment's own copy** — the fork's Chinese
+   strings (brand, tagline, built-in update notice) carry English projections in
+   `plugin-src/client/i18n.js`, so upstream's "every shipped string has an
+   English projection" invariant keeps holding.
+9. **Fork-scoped test entry** — `scripts/run-tests.mjs` (wired as `yarn test`)
+   runs every upstream suite the built-in deployment can execute and skips three
+   with their reason printed, instead of failing on suites that belong to the
+   upstream release pipeline: `host.test.mjs` imports upstream Host
+   dev-dependencies the packaged fork does not install (the Desktop
+   `verify-profile-boot.mjs` smoke covers that path), and `update-service.test.mjs`
+   / `update-ui.test.mjs` assert the npm self-update flow the fork replaces with
+   the built-in "ships with the app" policy. The three files stay in the tree for
+   a future upstream refresh.
 
 ## Refresh workflow
 

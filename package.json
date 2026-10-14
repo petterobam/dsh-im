@@ -102,7 +102,7 @@
   },
   "scripts": {
     "build": "node plugin-src/client/build.mjs && node plugin-src/host/build.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "node scripts/run-tests.mjs",
     "check": "yarn run typecheck && yarn run build && yarn run test && yarn run verify:package",
     "verify:package": "node scripts/verify-package.mjs",
     "typecheck": "node scripts/check-syntax.mjs"

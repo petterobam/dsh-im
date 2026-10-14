@@ -196,11 +196,12 @@ test('IM settings renders nine IM channels plus the AI Office connector', async 
   }));
 
   assert.match(markup, /IM机器人/);
-  assert.match(markup, /让 DeepSeek Harness 触手可及/);
+  // Fork branding: the deployment ships 有风 IM.
+  assert.match(markup, /把飞书等 IM 机器人连接到有风 Buddy/);
   assert.match(markup, /class="dim-brand"/);
   assert.equal(IM_PLUGIN_VERSION, packageVersion);
   assert.match(markup, new RegExp(
-    `<div class="dim-brandHeading"><strong class="dim-brandName">DSH-IM<\\/strong><span class="dim-brandVersion">v${packageVersion.replaceAll('.', '\\.')}<\\/span><\\/div>`,
+    `<div class="dim-brandHeading"><strong class="dim-brandName">有风 IM<\\/strong><span class="dim-brandVersion">v${packageVersion.replaceAll('.', '\\.')}<\\/span><\\/div>`,
   ));
   assert.doesNotMatch(markup, /dim-versionTooltip|当前版本/);
   assert.doesNotMatch(markup, /dim-brandLogo|<img/);
@@ -1114,7 +1115,8 @@ test('client registers one top-level bilingual IM settings section with a direct
       registrations[0].component,
       injected,
     ));
-    assert.match(markup, /Connecting DeepSeek Harness/);
+    // Fork branding: the English projection of the deployment's own tagline.
+    assert.match(markup, /Connect Feishu and other IM bots to Youfeng Buddy/);
     assert.match(markup, new RegExp(
       `class="dim-brandVersion">v${IM_PLUGIN_VERSION.replaceAll('.', '\\.')}<\\/span>`,
     ));
