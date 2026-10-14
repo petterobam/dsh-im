@@ -246,9 +246,9 @@ export function IMSettingsTab({
     h('header', { className: 'dim-title' },
       h('div', { className: 'dim-brand' },
         h('div', { className: 'dim-brandHeading' },
-          h('strong', { className: 'dim-brandName' }, 'DSH-IM'),
+          h('strong', { className: 'dim-brandName' }, '有风 IM'),
           h('span', { className: 'dim-brandVersion' }, `v${runningVersion}`)),
-        h('p', null, '让 DeepSeek Harness 触手可及')),
+        h('p', null, '把飞书等 IM 机器人连接到有风 Buddy')),
       h('div', { className: 'dim-titleActions' },
         h(UpdatePanel, {
           rpcCall: rpcCalls.updateRpcCall,

@@ -1,5 +1,14 @@
 import { RegistrationManager } from './registration-manager.mjs';
 import { SLASH_COMMAND_TENANT_SCOPES } from './slash-command-registry.mjs';
+import {
+  WIND_FEISHU_APP_DESC,
+  WIND_FEISHU_APP_NAME,
+  WIND_FEISHU_CALLBACKS,
+  WIND_FEISHU_EVENTS,
+  WIND_FEISHU_EXTRA_TENANT_SCOPES,
+  WIND_FEISHU_REDIRECT_URIS,
+  WIND_FEISHU_USER_SCOPES,
+} from './wind-config.mjs';
 
 export const FEISHU_SECRET_REF = 'DSH_FEISHU_APP_SECRET';
 
@@ -13,6 +22,7 @@ export const REQUIRED_TENANT_SCOPES = Object.freeze([
   'im:resource',
   'cardkit:card:write',
   ...SLASH_COMMAND_TENANT_SCOPES,
+  ...WIND_FEISHU_EXTRA_TENANT_SCOPES,
 ]);
 
 function safeConnectionStatus(runtime) {
@@ -45,23 +55,26 @@ export class DshFeishuController {
   #credentials;
   #configStore;
   #createRuntime;
+  #configureApp;
   #registration;
   #runtime = null;
   #lastError = null;
   #transition = Promise.resolve();
 
-  constructor({ registerApp, verifyApp, credentials, configStore, createRuntime }) {
+  constructor({ registerApp, verifyApp, configureApp, credentials, configStore, createRuntime }) {
     if (typeof registerApp !== 'function') throw new Error('registerApp is required');
     if (typeof verifyApp !== 'function') throw new Error('verifyApp is required');
     if (!credentials) throw new Error('credentials service is required');
     if (!configStore) throw new Error('config store is required');
     if (typeof createRuntime !== 'function') throw new Error('createRuntime is required');
+    if (configureApp !== undefined && typeof configureApp !== 'function') throw new Error('configureApp must be a function');
 
     this.#registerApp = registerApp;
     this.#verifyApp = verifyApp;
     this.#credentials = credentials;
     this.#configStore = configStore;
     this.#createRuntime = createRuntime;
+    this.#configureApp = configureApp;
     this.#registration = new RegistrationManager({
       registerApp: this.#registerApp,
       onCredentials: (result) => this.#serialize(() => this.#acceptCredentials(result)),
@@ -99,14 +112,17 @@ export class DshFeishuController {
       source: 'deepseek-harness',
       createOnly: true,
       appPreset: {
-        name: '{user} 的北汇星河 AI 助手',
-        desc: '连接飞书与 DeepSeek Harness，在聊天中使用企业 AI 助手。',
+        name: WIND_FEISHU_APP_NAME,
+        desc: WIND_FEISHU_APP_DESC,
       },
       addons: {
         preset: false,
-        scopes: { tenant: [...REQUIRED_TENANT_SCOPES] },
-        events: { items: { tenant: ['im.message.receive_v1'] } },
-        callbacks: { items: ['card.action.trigger'] },
+        scopes: {
+          tenant: [...REQUIRED_TENANT_SCOPES],
+          user: [...WIND_FEISHU_USER_SCOPES],
+        },
+        events: { items: { tenant: [...WIND_FEISHU_EVENTS] } },
+        callbacks: { items: [...WIND_FEISHU_CALLBACKS] },
       },
     });
     return this.status();
@@ -197,6 +213,22 @@ export class DshFeishuController {
     if (!ownerOpenId) throw new Error('Feishu registration returned no owner open_id');
 
     const bot = await this.#verifyApp({ appId, appSecret, domain });
+    if (this.#configureApp) {
+      try {
+        await this.#configureApp({
+          appId,
+          appSecret,
+          domain,
+          events: WIND_FEISHU_EVENTS,
+          callbacks: WIND_FEISHU_CALLBACKS,
+          redirectUris: WIND_FEISHU_REDIRECT_URIS,
+        });
+      } catch {
+        // Some tenants require the owner to publish before the sensitive config
+        // API accepts updates. The app and credentials stay usable; the
+        // desktop OAuth hand-off reports the precise configuration failure.
+      }
+    }
     await this.#credentials.set(FEISHU_SECRET_REF, appSecret);
     let config;
     try {

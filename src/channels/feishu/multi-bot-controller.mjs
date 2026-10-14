@@ -15,6 +15,14 @@ import {
   isFeishuGroupResponseMode,
   normalizeFeishuGroupResponseMode,
 } from './group-response-mode.mjs';
+import {
+  WIND_FEISHU_APP_DESC,
+  WIND_FEISHU_APP_NAME,
+  WIND_FEISHU_CALLBACKS,
+  WIND_FEISHU_EVENTS,
+  WIND_FEISHU_REDIRECT_URIS,
+  WIND_FEISHU_USER_SCOPES,
+} from './wind-config.mjs';
 
 const ACTIVE_REGISTRATION_STATES = new Set([
   'starting', 'qr_ready', 'polling', 'slow_down', 'domain_switched',
@@ -110,6 +118,7 @@ function optionalNonEmptyString(value) {
 export class MultiBotDshFeishuController {
   #registerApp;
   #verifyApp;
+  #configureApp;
   #credentials;
   #configStore;
   #createRuntime;
@@ -131,6 +140,7 @@ export class MultiBotDshFeishuController {
   constructor({
     registerApp,
     verifyApp,
+    configureApp,
     credentials,
     configStore,
     createRuntime,
@@ -141,6 +151,7 @@ export class MultiBotDshFeishuController {
   }) {
     if (typeof registerApp !== 'function') throw new Error('registerApp is required');
     if (typeof verifyApp !== 'function') throw new Error('verifyApp is required');
+    if (configureApp !== undefined && typeof configureApp !== 'function') throw new Error('configureApp must be a function');
     if (!credentials) throw new Error('credentials service is required');
     if (!configStore || typeof configStore.list !== 'function') {
       throw new Error('multi-bot config store is required');
@@ -154,6 +165,7 @@ export class MultiBotDshFeishuController {
     }
     this.#registerApp = registerApp;
     this.#verifyApp = verifyApp;
+    this.#configureApp = configureApp;
     this.#credentials = credentials;
     this.#configStore = configStore;
     this.#createRuntime = createRuntime;
@@ -231,14 +243,17 @@ export class MultiBotDshFeishuController {
       source: 'deepseek-harness',
       createOnly: true,
       appPreset: {
-        name: '{user} 的北汇星河 AI 助手',
-        desc: '连接飞书与 DeepSeek Harness，在聊天中使用企业 AI 助手。',
+        name: WIND_FEISHU_APP_NAME,
+        desc: WIND_FEISHU_APP_DESC,
       },
       addons: {
         preset: false,
-        scopes: { tenant: [...REQUIRED_TENANT_SCOPES] },
-        events: { items: { tenant: ['im.message.receive_v1'] } },
-        callbacks: { items: ['card.action.trigger'] },
+        scopes: {
+          tenant: [...REQUIRED_TENANT_SCOPES],
+          user: [...WIND_FEISHU_USER_SCOPES],
+        },
+        events: { items: { tenant: [...WIND_FEISHU_EVENTS] } },
+        callbacks: { items: [...WIND_FEISHU_CALLBACKS] },
       },
     });
     this.#touch();
@@ -1073,6 +1088,22 @@ export class MultiBotDshFeishuController {
 
     const bot = await this.#verifyApp({ appId, appSecret, domain });
     if (record.cancelled) throw new Error('Registration was cancelled');
+    if (this.#configureApp) {
+      try {
+        await this.#configureApp({
+          appId,
+          appSecret,
+          domain,
+          events: WIND_FEISHU_EVENTS,
+          callbacks: WIND_FEISHU_CALLBACKS,
+          redirectUris: WIND_FEISHU_REDIRECT_URIS,
+        });
+      } catch {
+        // Some tenants require the owner to publish before the sensitive config
+        // API accepts updates. Keep the created app usable and let the desktop
+        // OAuth hand-off surface any remaining configuration problem.
+      }
+    }
     const existing = this.#configStore.list().find((candidate) => candidate.appId === appId);
     const botId = existing?.id ?? this.#createBotId();
     if (typeof botId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(botId)

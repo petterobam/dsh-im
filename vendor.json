@@ -1,0 +1,10 @@
+{
+  "upstream": "https://github.com/xmanrui/dsh-im",
+  "version": "4.13.0",
+  "tag": "v4.13.0",
+  "commit": "45693cbb44a3fa50766e3939f78d0d96675aa651",
+  "tarball": "https://registry.npmmirror.com/@xmanrui/dsh-im/-/dsh-im-4.13.0.tgz",
+  "tarballSha256": "fbbe190047d215689517aa20584d04205e98cd742f961d1c6b10171befcd57d0",
+  "fileCount": 288,
+  "note": "Vendored package extracted with --strip-components=1; local deltas are recorded in FORK.md."
+}

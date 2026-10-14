@@ -1,5 +1,4 @@
-import { createUpdateRuntime } from './update-runtime.mjs';
-import { createUpdateService } from './update-service.mjs';
+import manifest from '../../package.json' with { type: 'json' };
 
 export const UPDATE_RPC_CHANNEL = '/dsh-im';
 export const UPDATE_ENDPOINTS = Object.freeze(['update.status', 'update.check', 'update.install']);
@@ -39,12 +38,27 @@ export function createUpdateRpcHandler(service) {
   };
 }
 
-export function installUpdateRpc(ctx, options = {}) {
-  const runtime = options.runtime ?? createUpdateRuntime({ ctx, moduleUrl: import.meta.url });
-  const service = options.service ?? createUpdateService({ runtime });
-  const dispose = ctx.connection.rpc.handle(UPDATE_RPC_CHANNEL, createUpdateRpcHandler(service), {
-    authority: 'loopback',
-  });
-  ctx.effect(() => () => service.close(), 'dsh-im: close update installer');
-  return dispose;
+function builtinUpdateSnapshot() {
+  return {
+    runningVersion: manifest.version,
+    latestVersion: manifest.version,
+    canInstall: false,
+    blockedReason: 'source-install',
+    checkedAt: Date.now(),
+    job: null,
+  };
+}
+
+/** Built-in plugin updates ship with the Desktop application, never through npm. */
+export function installUpdateRpc(ctx) {
+  return ctx.connection.rpc.handle(UPDATE_RPC_CHANNEL, async (endpoint, payload, signal) => {
+    if (!UPDATE_ENDPOINTS.includes(endpoint) || !validPayload(endpoint, payload)) {
+      return { ok: false, error: { code: 'bad-request', message: 'Invalid update request.' } };
+    }
+    if (signal?.aborted) return { ok: false, error: { code: 'cancelled', message: 'Request cancelled.' } };
+    if (endpoint === 'update.install') {
+      return { ok: false, error: { code: 'unsupported-runtime', message: 'Built-in plugin updates ship with the application.' } };
+    }
+    return { ok: true, value: builtinUpdateSnapshot() };
+  }, { authority: 'loopback' });
 }

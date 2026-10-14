@@ -95,7 +95,7 @@ After the model calls the file-return tool, the plugin hands the specified file 
 Install the published stable release from npm (recommended):
 
 ```sh
-dsh plugin --profile web add -w @xmanrui/dsh-im
+dsh plugin --profile web add -w dsh-plugin-im
 ```
 
 Restart `dsh web`, refresh the browser, then open **Settings → IM Bot**. The top-level IM Bot entry uses `order: 21` to follow **Agent Presets**, and the Plugins page no longer retains the old entry. Upgrading preserves existing bots, credentials, workspaces, Agent Presets, and Session bindings.

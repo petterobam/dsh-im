@@ -655,7 +655,7 @@ export function installImStyles() {
   const existing = document.querySelector(`style[data-plugin-css="${IM_STYLE_ID}"]`);
   if (existing) return () => {};
   const style = document.createElement('style');
-  style.dataset.plugin = '@xmanrui/dsh-im';
+  style.dataset.plugin = 'dsh-plugin-im';
   style.dataset.pluginCss = IM_STYLE_ID;
   style.textContent = CSS;
   document.head.appendChild(style);

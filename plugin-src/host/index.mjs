@@ -71,6 +71,18 @@ export function createImHostPlugin(internals = {}) {
         .filter((channel) => channel !== 'office'
           && config[channel]?.harnessBaseUrl !== undefined);
       const deliveryService = makeDeliveryService({ unavailableSessionSyncChannels });
+      let feishuController = null;
+      const requireFeishuController = () => {
+        if (!feishuController) {
+          throw new Error('Feishu channel is not ready yet');
+        }
+        return feishuController;
+      };
+      const feishuStatus = async (attemptId) => {
+        const controller = requireFeishuController();
+        if (!attemptId) return await controller.status();
+        return await controller.registrationStatus(attemptId) ?? await controller.status();
+      };
       if (typeof ctx?.provide === 'function') {
         ctx.provide('dshIm', Object.freeze({
           send: (botId, targetId, text, options) => (
@@ -78,6 +90,9 @@ export function createImHostPlugin(internals = {}) {
           ),
           listTargets: async (botId) => (await deliveryService.listTargets(botId)).targets,
           listBots: () => deliveryService.listBots(),
+          startFeishuRegistration: async () => await requireFeishuController().startRegistration(),
+          getFeishuStatus: (attemptId) => feishuStatus(attemptId),
+          cancelFeishuRegistration: async (attemptId) => await requireFeishuController().cancelRegistration(attemptId),
         }));
       }
       const activate = async (readyCtx) => {
@@ -133,7 +148,10 @@ export function createImHostPlugin(internals = {}) {
     const failures = [];
     for (const [channel, start] of channels) {
       try {
-        await start(ctx, channelConfig(config, channel, deliveryService));
+        const started = await start(ctx, channelConfig(config, channel, deliveryService));
+        if (channel === 'feishu' && started?.controller) {
+          feishuController = started.controller;
+        }
       } catch (error) {
         failures.push(error);
         logger.error?.(`[dsh-im] failed to activate ${channel}; continuing with the remaining channels`, error);

@@ -11,7 +11,10 @@ import {
   getInboundTtlRuntime,
   registerInboundTtlWorkspaces,
 } from '../../inbound-ttl-runtime.mjs';
-import { verifyFeishuApp } from '../../../../src/channels/feishu/feishu-app.mjs';
+import {
+  configureFeishuApplication,
+  verifyFeishuApp,
+} from '../../../../src/channels/feishu/feishu-app.mjs';
 import { FeishuRuntime } from '../../../../src/channels/feishu/feishu-runtime.mjs';
 import { HarnessClient } from '../../../../src/channels/feishu/harness-client.mjs';
 import {
@@ -110,6 +113,21 @@ export async function createProductionController(ctx, config = {}, internals = {
     ...options,
     httpInstance: lark.defaultHttpInstance,
   });
+  const configureApp = internals.configureApp ?? (async ({ appId, appSecret, domain, events, callbacks, redirectUris }) => {
+    const client = new lark.Client({
+      appId,
+      appSecret,
+      appType: lark.AppType.SelfBuild,
+      domain: domain === 'lark' ? lark.Domain.Lark : lark.Domain.Feishu,
+    });
+    return await configureFeishuApplication({
+      client,
+      appId,
+      events,
+      callbacks,
+      redirectUris,
+    });
+  });
   const createSupervisor = internals.createConnectionSupervisor ?? createConnectionSupervisor;
   const logger = typeof ctx.logger === 'function'
     ? ctx.logger('dsh-feishu')
@@ -196,6 +214,7 @@ export async function createProductionController(ctx, config = {}, internals = {
   const coreController = new Controller({
     registerApp: (options) => lark.registerApp(options),
     verifyApp,
+    configureApp,
     credentials: ctx.credentials,
     configStore: observedConfigStore,
     createRuntime: async ({ botId, config: botConfig, appSecret, repair }) => {

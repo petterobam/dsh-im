@@ -10,7 +10,7 @@ export const UPDATE_RPC_CHANNEL = '/dsh-im';
 
 const ACTIVE_STATES = new Set(['installing', 'verifying']);
 const BLOCKED_REASONS = Object.freeze({
-  'source-install': '当前是源码或链接安装，只能检查版本；请手动更新源码，或迁移到 npm 安装。',
+  'source-install': '这是有风 Buddy 内置插件，随应用更新，无需单独更新。',
   'unknown-profile': '无法确认当前 profile，请在对应的 Harness 环境中手动更新。',
   'unsupported-runtime': '当前运行环境不支持按钮安装，请手动更新插件。',
   'registry-conflict': '当前 npm 源配置与官方源不一致，请先检查 registry 配置。',
@@ -109,7 +109,7 @@ function manualUpdateCommand(snapshot) {
     ? [...targets, snapshot.runningVersion, snapshot.installedVersion]
       .filter(validVersion).sort(compareVersionsDescending)[0]
     : 'latest';
-  return `dsh plugin --profile ${profileArgument} add -w @xmanrui/dsh-im@${version}`;
+  return `dsh plugin --profile ${profileArgument} add -w dsh-plugin-im@${version}`;
 }
 
 function ManualUpdateCommand({ command, disabled, sourceInstall, desktop }) {
@@ -167,7 +167,7 @@ function ManualUpdateCommand({ command, disabled, sourceInstall, desktop }) {
           : h(React.Fragment, null,
               h('rect', { x: 7, y: 7, width: 10, height: 11, rx: 1.5 }),
               h('path', { d: 'M5 13H3.5A1.5 1.5 0 0 1 2 11.5v-8A1.5 1.5 0 0 1 3.5 2h8A1.5 1.5 0 0 1 13 3.5V5' }))))),
-      command.endsWith('@xmanrui/dsh-im@latest') ? h('p', { className: 'dim-updateManualHint' },
+      command.endsWith('dsh-plugin-im@latest') ? h('p', { className: 'dim-updateManualHint' },
         '尚未确认目标版本，此命令安装执行时 npm 的 latest 版本。') : null,
       h('p', { className: 'dim-updateManualHint' }, desktop
         ? '请在当前 Desktop 的内置终端执行，完成后手动重启。'

@@ -5,7 +5,7 @@ import { homedir, tmpdir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const PACKAGE_NAME = '@xmanrui/dsh-im';
+const PACKAGE_NAME = 'dsh-plugin-im';
 const DEFAULT_SOURCE = 'github:xmanrui/dsh-im';
 const LEGACY_PACKAGES = [
   '@xmanrui/dsh-feishu',
