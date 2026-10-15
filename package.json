@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-im",
-  "version": "4.13.0+windbuddy.3",
+  "version": "4.13.0+windbuddy.4",
   "description": "有风 Buddy 内置 IM 机器人：飞书扫码创建应用、申请办公权限、长连接收发消息，并连接本机 DSH。",
   "keywords": [
     "deepseek-harness",

@@ -87,19 +87,29 @@ export async function configureFeishuApplication({
   const application = client.application;
   const modern = application?.v7?.applicationConfig;
   if (modern && typeof modern.patch === 'function') {
+    // Scope repair is best-effort and isolated from event/security config: an
+    // existing app may already carry these scopes, and a duplicate-scope error
+    // must not prevent long-connection or redirect setup.
+    if (tenantScopes.length || userScopes.length) {
+      try {
+        await modern.patch({
+          path: { app_id: appId },
+          data: {
+            scope: {
+              add_scopes: [
+                ...tenantScopes.map((scope_name) => ({ scope_name, token_type: 'tenant' })),
+                ...userScopes.map((scope_name) => ({ scope_name, token_type: 'user' })),
+              ],
+            },
+          },
+        });
+      } catch {
+        // Some tenants require publishing or administrator approval first.
+      }
+    }
     const response = await modern.patch({
       path: { app_id: appId },
       data: {
-        ...(tenantScopes.length || userScopes.length
-          ? {
-              scope: {
-                add_scopes: [
-                  ...tenantScopes.map((scope_name) => ({ scope_name, token_type: 'tenant' })),
-                  ...userScopes.map((scope_name) => ({ scope_name, token_type: 'user' })),
-                ],
-              },
-            }
-          : {}),
         event: {
           subscription_type: 'websocket',
           add_events: [...events],
