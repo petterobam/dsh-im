@@ -64,6 +64,8 @@ export async function verifyFeishuApp({
  * @param {readonly string[]} input.events - event subscriptions to request.
  * @param {readonly string[]} input.callbacks - callbacks requested by addons.
  * @param {readonly string[]} input.redirectUris - OAuth redirect URLs.
+ * @param {readonly string[]} input.tenantScopes - tenant scopes to add.
+ * @param {readonly string[]} input.userScopes - user scopes to add.
  * @returns {Promise<object>} applied configuration summary.
  */
 export async function configureFeishuApplication({
@@ -72,6 +74,8 @@ export async function configureFeishuApplication({
   events = [],
   callbacks = [],
   redirectUris = [],
+  tenantScopes = [],
+  userScopes = [],
 } = {}) {
   if (!client || typeof client !== 'object') {
     throw new TypeError('Feishu application configuration requires a client');
@@ -86,6 +90,16 @@ export async function configureFeishuApplication({
     const response = await modern.patch({
       path: { app_id: appId },
       data: {
+        ...(tenantScopes.length || userScopes.length
+          ? {
+              scope: {
+                add_scopes: [
+                  ...tenantScopes.map((scope_name) => ({ scope_name, token_type: 'tenant' })),
+                  ...userScopes.map((scope_name) => ({ scope_name, token_type: 'user' })),
+                ],
+              },
+            }
+          : {}),
         event: {
           subscription_type: 'websocket',
           add_events: [...events],
@@ -99,7 +113,7 @@ export async function configureFeishuApplication({
     if (response?.code) {
       throw new Error(`Feishu application config failed: ${response.msg ?? `code ${response.code}`}`);
     }
-    return { configured: true, mode: 'v7', events: [...events], callbacks: [...callbacks], redirectUris: [...redirectUris] };
+    return { configured: true, mode: 'v7', events: [...events], callbacks: [...callbacks], redirectUris: [...redirectUris], tenantScopes: [...tenantScopes], userScopes: [...userScopes] };
   }
 
   const legacy = application?.v6?.application;

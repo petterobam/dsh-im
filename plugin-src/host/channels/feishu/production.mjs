@@ -126,6 +126,8 @@ export async function createProductionController(ctx, config = {}, internals = {
       events,
       callbacks,
       redirectUris,
+      tenantScopes: WIND_FEISHU_EXTRA_TENANT_SCOPES,
+      userScopes: WIND_FEISHU_USER_SCOPES,
     });
   });
   const createSupervisor = internals.createConnectionSupervisor ?? createConnectionSupervisor;

@@ -47,12 +47,20 @@ test('configures long connection, redirect URL and refresh token after creation'
     events: WIND_FEISHU_EVENTS,
     callbacks: WIND_FEISHU_CALLBACKS,
     redirectUris: WIND_FEISHU_REDIRECT_URIS,
+    tenantScopes: WIND_FEISHU_EXTRA_TENANT_SCOPES,
+    userScopes: WIND_FEISHU_USER_SCOPES,
   });
   assert.equal(result.configured, true);
   assert.equal(result.mode, 'v7');
   assert.deepEqual(calls, [{
     path: { app_id: 'cli_test' },
     data: {
+      scope: {
+        add_scopes: [
+          { scope_name: 'application:application:self_manage', token_type: 'tenant' },
+          ...WIND_FEISHU_USER_SCOPES.map(scope_name => ({ scope_name, token_type: 'user' })),
+        ],
+      },
       event: { subscription_type: 'websocket', add_events: ['im.message.receive_v1'] },
       security: {
         add: { redirect_urls: ['http://localhost:3000/callback'] },
