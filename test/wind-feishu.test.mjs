@@ -22,7 +22,9 @@ test('uses the 有风 Buddy app identity and office permissions', () => {
   assert.ok(WIND_FEISHU_USER_SCOPES.includes('calendar:calendar'));
   assert.ok(WIND_FEISHU_USER_SCOPES.includes('offline_access'));
   assert.ok(WIND_FEISHU_EXTRA_TENANT_SCOPES.includes('application:application:self_manage'));
+  assert.ok(WIND_FEISHU_EXTRA_TENANT_SCOPES.includes('application:application:patch'));
   assert.ok(REQUIRED_TENANT_SCOPES.includes('application:application:self_manage'));
+  assert.ok(REQUIRED_TENANT_SCOPES.includes('application:application:patch'));
   assert.deepEqual(WIND_FEISHU_EVENTS, ['im.message.receive_v1']);
   assert.deepEqual(WIND_FEISHU_CALLBACKS, ['card.action.trigger']);
 });
@@ -59,6 +61,7 @@ test('configures long connection, redirect URL and refresh token after creation'
         scope: {
           add_scopes: [
             { scope_name: 'application:application:self_manage', token_type: 'tenant' },
+            { scope_name: 'application:application:patch', token_type: 'tenant' },
             ...WIND_FEISHU_USER_SCOPES.map(scope_name => ({ scope_name, token_type: 'user' })),
           ],
         },

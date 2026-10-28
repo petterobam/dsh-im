@@ -14,6 +14,7 @@ export const WIND_FEISHU_REDIRECT_URIS = Object.freeze(['http://localhost:3000/c
 /** Extra tenant scopes beyond the IM runtime's base manifest. */
 export const WIND_FEISHU_EXTRA_TENANT_SCOPES = Object.freeze([
   'application:application:self_manage',
+  'application:application:patch',
 ]);
 
 /** User scopes requested on the app confirmation page for personal work. */
